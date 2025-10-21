@@ -25,16 +25,26 @@ def check_steam_free_games():
             
             for entry in feed.entries[:10]:  # 检查更多条目
                 title = entry.title
-                link = entry.link
+                link = entry.link.lower()  # 链接也转为小写便于检查
+
+                # --- 更严格的过滤条件 ---
+                steam_keywords = ['steam', 'Steam']
+                # 必须包含以下词条之一才推送
+                must_contain_keywords = ['free', 'Free', '100%', 'giveaway']
+                # 包含以下任何词条就排除（不推送）
+                excluded_keywords = ['DLC', 'dlc', 'beta', 'Beta', 'demo', 'Demo', 'pack', 'Pack', 'cosmetic', 'skin', 'item', 'ingame', 'in-game', 'Epic', 'GOG', 'Amazon', 'Uplay']
+
+                # 检查1：必须与Steam相关
+                is_steam_related = any(keyword in title for keyword in steam_keywords) or 'steampowered.com' in link
                 
-                # 更好的关键词过滤
-                steam_keywords = ['steam', 'Steam', '喜加一', 'free', 'Free', '100%']
-                excluded_keywords = ['DLC only', 'DLC', 'beta', 'Beta', 'demo', 'Demo']
+                # 检查2：必须明确是免费活动
+                is_truly_free = any(keyword in title for keyword in must_contain_keywords)
                 
-                # 检查是否包含Steam关键词且不包含排除关键词
-                if (any(keyword in title for keyword in steam_keywords) and 
-                    not any(exclude in title for exclude in excluded_keywords)):
-                    
+                # 检查3：不能是排除的内容
+                is_excluded = any(exclude in title for exclude in excluded_keywords)
+
+                # 最终判断：与Steam相关 + 是真免费 + 不是排除内容
+                if is_steam_related and is_truly_free and not is_excluded:
                     # 使用链接作为唯一标识（更准确）
                     if link not in pushed_games:
                         # 清理游戏名称
