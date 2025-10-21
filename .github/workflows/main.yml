@@ -20,6 +20,13 @@ jobs:
         
     - name: Install dependencies
       run: pip install requests feedparser
+
+    # 新增：下载之前的推送记录
+    - name: Download previous pushed games
+      uses: actions/cache@v3
+      with:
+        path: pushed_games.json
+        key: pushed-games-${{ hashFiles('check_steam_free.py') }}
         
     - name: Check free games and notify
       env:
